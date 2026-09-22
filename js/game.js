@@ -17,8 +17,20 @@ const Game = {
   init() {
     this.cv = document.getElementById('game');
     this.ctx = this.cv.getContext('2d');
-    this.touch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
-    if (this.touch) FX.max = 420;
+    this.touch = matchMedia('(pointer: coarse)').matches ||
+      navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+    if (this.touch) {
+      FX.max = 420;
+      // v menu ukáž dotykové ovládanie namiesto klávesnice
+      const cl = document.getElementById('ctrlList');
+      if (cl) cl.innerHTML =
+        '<li><b>Ťuknutie a držanie prsta</b> – vystreliť a držať pavučinu</li>' +
+        '<li><b>◀ ▶</b> – pohyb, švih do strán</li>' +
+        '<li><b>▲ ▼ (lano)</b> – skrátiť / predĺžiť pavučinu, liezť po stene</li>' +
+        '<li><b>SKOK</b> – skok, odraz od steny</li>' +
+        '<li><b>E</b> – zdvihnúť človeka / pustiť, chytiť zlodeja</li>' +
+        '<li style="opacity:.75">Telefón otoč <b>na šírku</b>. Pokojne používaj dva prsty naraz.</li>';
+    }
     this.resize();
     addEventListener('resize', () => this.resize());
     addEventListener('orientationchange', () => setTimeout(() => this.resize(), 250));
