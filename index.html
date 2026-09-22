@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spider-Man: Záchranca mesta</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="wrap">
+  <canvas id="game"></canvas>
+
+  <div id="hud" class="hidden">
+    <div class="panel left">
+      <div class="row"><span class="lbl">SKÓRE</span><span id="score">0</span></div>
+      <div class="row"><span class="lbl">ZACHRÁNENÍ</span><span id="saved">0</span></div>
+    </div>
+    <div class="panel center">
+      <div class="lbl">DÔVERA MESTA</div>
+      <div class="bar"><div id="trustFill"></div></div>
+    </div>
+    <div class="panel right">
+      <div class="row"><span class="lbl">ČAS</span><span id="time">0:00</span></div>
+      <div class="row"><span class="lbl">MISIE</span><span id="mcount">0</span></div>
+    </div>
+    <div id="toast"></div>
+    <div id="hint">Ľavé tlačidlo myši = pavučina &nbsp;·&nbsp; A/D = pohyb &nbsp;·&nbsp; MEDZERNÍK = skok &nbsp;·&nbsp; W/S = ťahať sa hore/dole &nbsp;·&nbsp; E = zdvihnúť / pustiť človeka</div>
+  </div>
+
+  <div id="menu" class="overlay">
+    <h1>SPIDER-MAN</h1>
+    <h2>Záchranca mesta</h2>
+    <div class="cols">
+      <div class="card">
+        <h3>Ovládanie</h3>
+        <ul>
+          <li><b>Myš (držať)</b> – vystreliť a držať pavučinu</li>
+          <li><b>A / D</b> – pohyb, švih do strán</li>
+          <li><b>MEDZERNÍK</b> – skok, odraz od steny</li>
+          <li><b>W / S</b> – skrátiť / predĺžiť pavučinu, liezť po stene</li>
+          <li><b>E</b> – zdvihnúť človeka / pustiť, chytiť zlodeja</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Úloha</h3>
+        <ul>
+          <li>🔥 Vytiahni ľudí z <b>horiacich áut</b></li>
+          <li>🏢 Zachráň ich zo <b>striech horiacich budov</b></li>
+          <li>🪂 Chyť <b>padajúcich</b> skôr, než dopadnú</li>
+          <li>🦹 Chyť <b>zlodejov</b> skôr, než ujdú</li>
+          <li>🚑 Zachránených odnes do <b>zelenej bezpečnej zóny</b></li>
+        </ul>
+      </div>
+    </div>
+    <button id="btnStart">ŠTART</button>
+    <p class="small">Keď dôvera mesta klesne na nulu, hra končí.</p>
+  </div>
+
+  <div id="over" class="overlay hidden">
+    <h1>KONIEC</h1>
+    <p class="big" id="overText"></p>
+    <button id="btnAgain">HRAŤ ZNOVA</button>
+  </div>
+</div>
+
+<script src="js/utils.js"></script>
+<script src="js/world.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/player.js"></script>
+<script src="js/missions.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
