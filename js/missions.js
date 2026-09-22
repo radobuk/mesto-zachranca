@@ -39,6 +39,20 @@ function drawPerson(ctx, p, t, scale = 1) {
   ctx.restore();
 }
 
+function drawWing(ctx, x, y, ang, len) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(ang);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(-len, -len * 0.32);
+  ctx.lineTo(-len * 0.92, -len * 0.04);
+  ctx.lineTo(-len * 0.52, len * 0.14);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
 const Missions = {
   list: [],
   spawnTimer: 120,
@@ -50,7 +64,13 @@ const Missions = {
     const G = World.GROUND_Y;
     if (!type) {
       const r = Math.random();
-      type = r < 0.32 ? 'car' : r < 0.6 ? 'building' : r < 0.82 ? 'fall' : 'thief';
+      // Supavec sa objaví až po minúte hry a vždy len jeden naraz
+      const canV = game.time > 3600 && !this.list.some((x) => x.v);
+      if (canV && r < 0.2) type = 'vulture';
+      else if (r < 0.38) type = 'car';
+      else if (r < 0.62) type = 'building';
+      else if (r < 0.84) type = 'fall';
+      else type = 'thief';
     }
     const m = { type, time: 0, rescued: false, done: false };
 
@@ -74,7 +94,7 @@ const Missions = {
       m.pts = 200;
     } else if (type === 'fall') {
       const b = World.randomBuilding(420);
-      m.x = b.x + (Math.random() < 0.5 ? 6 : b.w - 6);
+      m.x = Math.random() < 0.5 ? b.x - 20 : b.x + b.w + 20;
       m.y = b.y - 10;
       m.max = 14 * 60;
       m.victim = makeVictim(m.x, m.y);
@@ -83,6 +103,18 @@ const Missions = {
       m.label = 'Človek padá!';
       m.color = '#ffe14d';
       m.pts = 250;
+    } else if (type === 'vulture') {
+      m.dir = Math.random() < 0.5 ? -1 : 1;
+      const px = game.player ? game.player.x : 1200;
+      m.x = U.clamp(px - m.dir * 900, 500, World.W - 500);
+      m.y = World.roofAbove(m.x, 300) - U.rnd(150, 210);
+      m.v = { x: m.x, y: m.y, hp: 3, stun: 0, hurt: 0, gone: false };
+      m.speed = 2.4;
+      m.max = 45 * 60;
+      m.victim = makeVictim(m.x, m.y + 50);
+      m.label = 'Supavec uniesol človeka!';
+      m.color = '#6ee7b0';
+      m.pts = 400;
     } else {
       m.dir = Math.random() < 0.5 ? -1 : 1;
       m.x = World.randomStreet();
@@ -112,6 +144,13 @@ const Missions = {
     for (let i = this.list.length - 1; i >= 0; i--) {
       const m = this.list[i];
       m.time += dt;
+
+      // porazený supavec odlieta preč
+      if (m.v && m.v.hp <= 0 && !m.v.gone) {
+        m.v.x += m.dir * 5 * dt;
+        m.v.y -= 2.4 * dt;
+        if (m.v.y < World.GROUND_Y - 1700) m.v.gone = true;
+      }
 
       if (m.type === 'car') {
         FX.fire(m.x - 24, m.y - 40, 1.1);
@@ -151,7 +190,66 @@ const Missions = {
             this.list.splice(i, 1);
             continue;
           }
-          if (v.y >= World.GROUND_Y - 6) { this.fail(m, game, false); this.list.splice(i, 1); continue; }
+          const onRoof = m.time > 24 && v.y > 0 && World.pointIn(v.x, v.y + 6);
+          if (v.y >= World.GROUND_Y - 6 || onRoof) {
+            this.fail(m, game, false);
+            this.list.splice(i, 1);
+            continue;
+          }
+        }
+      } else if (m.type === 'vulture') {
+        const v = m.v;
+        if (v.stun > 0) {
+          v.stun -= dt;
+          if (Math.random() < 0.4) FX.sparks(v.x + U.rnd(-18, 18), v.y + U.rnd(-12, 12), 1, '#bfffe4');
+        } else {
+          v.x += m.dir * m.speed * dt;
+        }
+        // drž sa nad strechami – inak by bol nedosiahnuteľný v budove
+        const roofY = World.roofAbove(v.x, 300) - 175;
+        v.y = U.lerp(v.y, roofY + Math.sin(m.time * 0.03) * 26, 0.06 * dt);
+        if (v.hurt > 0) v.hurt -= dt;
+        m.x = v.x; m.y = v.y;
+        m.victim.x = v.x + 2; m.victim.y = v.y + 54;
+        m.tx = v.x; m.ty = v.y - 16;
+
+        if (U.dist(p.x, p.y, v.x, v.y) < 62 && v.hurt <= 0) {
+          const spd = Math.hypot(p.vx, p.vy);
+          if (spd > 6) {
+            // poriadny zásah v rozlete
+            v.hp--; v.stun = 50; v.hurt = 42;
+            game.shake = 12;
+            FX.sparks(v.x, v.y, 26, '#bfffe4');
+            Snd.tone(520, 140, 0.18, 'square', 0.07);
+            p.vx = -p.vx * 0.5; p.vy = -7;
+            if (v.hp <= 0) {
+              FX.text(v.x, v.y - 54, 'PUSTIL HO!', '#6ee7b0', 24);
+              game.toast('Chyť ho, kým nedopadne!', '#ffe14d');
+              game.score += 120;
+              m.type = 'fall';          // odteraz je to chytanie padajúceho
+              m.time = 0; m.max = 14 * 60; m.rescued = false;
+              m.color = '#ffe14d';
+              m.victim.falling = true; m.victim.vx = m.dir * 1.6; m.victim.vy = -7;
+            } else {
+              FX.text(v.x, v.y - 50, 'ZÁSAH! ešte ' + v.hp + '×', '#ffffff', 20);
+            }
+          } else {
+            // priblížil si sa pomaly – odhodí ťa
+            v.hurt = 34;
+            const a = Math.atan2(p.y - v.y, p.x - v.x);
+            p.release();
+            p.vx = Math.cos(a) * 13;
+            p.vy = Math.sin(a) * 13 - 4;
+            game.shake = 8;
+            FX.text(p.x, p.y - 44, 'AU!', '#ff5b6e', 20);
+            Snd.tone(220, 90, 0.2, 'sawtooth', 0.05);
+          }
+        }
+
+        if (v.x < 70 || v.x > World.W - 70 || m.time >= m.max) {
+          this.fail(m, game, false, 'Supavec ušiel s rukojemníkom!');
+          this.list.splice(i, 1);
+          continue;
         }
       } else if (m.type === 'thief') {
         const th = m.thief;
@@ -196,7 +294,8 @@ const Missions = {
 
   // E = interakcia
   interact(p, game) {
-    if (p.carrying) {           // polož človeka
+    if (p.carrying) {           // polož človeka – len na zemi alebo na streche
+      if (!p.onGround) return;
       p.carrying.carried = false;
       p.carrying.y = p.y;
       p.carrying = null;
@@ -236,6 +335,7 @@ const Missions = {
     for (const m of this.list) {
       if (m.type === 'car') this.drawCar(ctx, m, t);
       if (m.type === 'thief') this.drawThief(ctx, m, t);
+      if (m.v && !m.v.gone) this.drawVulture(ctx, m, t);
       if (m.victim && !m.victim.carried) drawPerson(ctx, m.victim, t);
       // ukazovateľ nad cieľom
       if (!m.rescued) {
@@ -280,6 +380,57 @@ const Missions = {
     ctx.beginPath(); ctx.arc(x - 34, y - 3, 11, 0, 7); ctx.fill();
     ctx.beginPath(); ctx.arc(x + 34, y - 3, 11, 0, 7); ctx.fill();
     ctx.restore();
+  },
+
+  drawVulture(ctx, m, t) {
+    const v = m.v;
+    ctx.save();
+    ctx.translate(v.x, v.y);
+    if (v.stun > 0) ctx.rotate(Math.sin(t * 0.8) * 0.2);
+    ctx.scale(m.dir, 1);
+    const flap = Math.sin(t * 0.13);
+    const wa = -0.45 + flap * 0.5;
+
+    // zadné krídlo
+    ctx.fillStyle = '#1d5340';
+    drawWing(ctx, -4, -4, wa - 0.3, 52);
+    // pazúry držiace človeka
+    if (v.hp > 0) {
+      ctx.strokeStyle = '#2a6e54';
+      ctx.lineWidth = 5;
+      ctx.lineCap = 'round';
+      U.limb(ctx, -4, 6, 1.5, 16, 16, 0.25);
+      U.limb(ctx, 5, 6, 1.6, 16, 16, -0.25);
+    }
+    // telo
+    ctx.fillStyle = '#2f8461';
+    U.rr(ctx, -12, -16, 26, 26, 9); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,.3)';
+    U.rr(ctx, -12, -4, 26, 8, 4); ctx.fill();
+    // predné krídlo
+    ctx.fillStyle = '#3aa87a';
+    drawWing(ctx, -2, -8, wa, 60);
+    ctx.fillStyle = 'rgba(255,255,255,.12)';
+    drawWing(ctx, -2, -8, wa, 34);
+    // hlava s okuliarmi
+    ctx.fillStyle = '#2a6e54';
+    ctx.beginPath(); ctx.arc(7, -22, 10, 0, 7); ctx.fill();
+    ctx.fillStyle = '#12352a';
+    U.rr(ctx, 2, -27, 16, 9, 4); ctx.fill();
+    ctx.fillStyle = v.stun > 0 ? '#ffd45c' : '#ff5b6e';
+    ctx.beginPath(); ctx.arc(9, -23, 3, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(16, -23, 3, 0, 7); ctx.fill();
+    ctx.restore();
+
+    // ukazovateľ životov
+    if (v.hp > 0) {
+      for (let i = 0; i < 3; i++) {
+        ctx.fillStyle = i < v.hp ? '#6ee7b0' : 'rgba(255,255,255,.18)';
+        ctx.beginPath();
+        ctx.arc(v.x - 16 + i * 16, v.y - 44, 5, 0, 7);
+        ctx.fill();
+      }
+    }
   },
 
   drawThief(ctx, m, t) {

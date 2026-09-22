@@ -2,7 +2,8 @@
 <html lang="sk">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
 <title>Spider-Man: Záchranca mesta</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -25,6 +26,21 @@
     </div>
     <div id="toast"></div>
     <div id="hint">Ľavé tlačidlo myši = pavučina &nbsp;·&nbsp; A/D = pohyb &nbsp;·&nbsp; MEDZERNÍK = skok &nbsp;·&nbsp; W/S = ťahať sa hore/dole &nbsp;·&nbsp; E = zdvihnúť / pustiť človeka</div>
+  </div>
+
+
+  <div id="touch" class="hidden">
+    <button class="tbtn" data-k="up" style="left:78px;bottom:132px">▲<i>lano</i></button>
+    <button class="tbtn" data-k="left" style="left:14px;bottom:70px">◀</button>
+    <button class="tbtn" data-k="right" style="left:142px;bottom:70px">▶</button>
+    <button class="tbtn" data-k="down" style="left:78px;bottom:8px">▼<i>lano</i></button>
+    <button class="tbtn big" data-k="jump" style="right:14px;bottom:76px">SKOK</button>
+    <button class="tbtn act" data-k="action" style="right:102px;bottom:16px">E<i>zdvihni</i></button>
+  </div>
+
+  <div id="rotate">
+    <div class="rot-ico">📱</div>
+    <p>Otoč telefón <b>na šírku</b></p>
   </div>
 
   <div id="menu" class="overlay">

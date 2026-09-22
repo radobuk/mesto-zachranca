@@ -98,6 +98,16 @@ const World = {
     return best;
   },
 
+  // najvyššia strecha v okolí x (aby supavec lietal nad mestom, nie v ňom)
+  roofAbove(x, margin) {
+    let top = this.GROUND_Y - 300;
+    for (const b of this.buildings) {
+      if (b.x + b.w < x - margin || b.x > x + margin) continue;
+      if (b.y < top) top = b.y;
+    }
+    return top;
+  },
+
   nearestZone(x) {
     let best = this.zones[0], bd = 1e9;
     for (const z of this.zones) {

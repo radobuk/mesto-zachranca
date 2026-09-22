@@ -1,7 +1,7 @@
 # Spider-Man: Záchranca mesta
 
 **Hraj tu: https://radobuk.github.io/mesto-zachranca/**
-(odporúčaný Chrome; zatiaľ len klávesnica + myš, nie dotykové ovládanie)
+Funguje na počítači aj na mobile (telefón otoč na šírku).
 
 Malá akčná hra v prehliadači. Si Spider-Man, hojdáš sa na pavučine po meste
 a zachraňuješ ľudí skôr, než bude neskoro.
@@ -40,6 +40,21 @@ súborov z disku prísnejšie pravidlá.
 | **W / S** | skrátiť / predĺžiť pavučinu; na stene liezť hore a dole |
 | **E** | zdvihnúť človeka, položiť ho, chytiť zlodeja |
 
+### Na mobile / tablete
+
+Ovládanie sa zobrazí samo. Telefón otoč **na šírku**.
+
+| Tlačidlo | Akcia |
+|---|---|
+| **Ťuknutie a držanie prsta na obrazovke** | vystreliť a držať pavučinu – ťukni tam, kam chceš pavučinu |
+| **◀ ▶** | pohyb a švih do strán |
+| **▲ ▼ (lano)** | skrátiť / predĺžiť pavučinu, na stene liezť hore a dole |
+| **SKOK** | skok, odraz od steny, pustenie pavučiny |
+| **E** | zdvihnúť človeka, položiť ho, chytiť zlodeja |
+
+Ovládať sa dá viacerými prstami naraz – ľavý palec na pohybe,
+pravý na pavučine.
+
 Tipy:
 - Pavučinu stačí **držať** – keď sa neuchytí, hra ju sama skúša vystreliť znova.
 - Skracovaním pavučiny (**W**) v spodnej časti oblúka získaš rýchlosť a výšku.
@@ -53,6 +68,18 @@ Tipy:
 | 🏢 Požiar v budove | vylez na strechu, **E** = zdvihnúť človeka, odnes ho do zóny | 200 |
 | 🪂 Padajúci človek | chyť ho vo vzduchu skôr, než dopadne (stačí sa ho dotknúť) | 310 |
 | 🦹 Zlodej | dobehni/dolet k nemu a **E** = pavučina | 120 |
+| 🦅 **Supavec** | záporák – unesie človeka a letí s ním preč | 120 + 460 |
+
+### Supavec (záporák)
+
+Objaví sa po minúte hry. Lieta nad strechami a nesie v pazúroch uneseného
+človeka. Musíš ho **trafiť v rozlete trikrát** – nestačí sa k nemu prilepiť,
+musíš letieť dostatočne rýchlo (najlepšie na konci švihu na pavučine).
+Ak sa k nemu priblížiš pomaly, odhodí ťa.
+
+Po treťom zásahu človeka pustí – a ty ho musíš **chytiť vo vzduchu**,
+skôr než dopadne na strechu alebo na zem. Ak Supavec stihne doletieť
+na okraj mesta, rukojemníka ti odnesie.
 
 Zachráneného treba doniesť k **sanitke v zelenej zóne** – šípka ti ju ukáže.
 Šípky po okrajoch obrazovky vedú k aktívnym misiám a ukazujú vzdialenosť.
@@ -73,7 +100,7 @@ js/world.js       generovanie mesta, budovy, ulica, bezpečné zóny
 js/effects.js     častice – oheň, dym, iskry, plávajúce texty
 js/sound.js       zvuky cez WebAudio (bez externých súborov)
 js/player.js      Spider-Man: fyzika hojdania, lezenie, kreslenie
-js/missions.js    štyri typy misií, obete, zlodeji, bodovanie
+js/missions.js    päť typov misií vrátane Supavca, obete, bodovanie
 js/game.js        herná slučka, kamera, vstupy, HUD
 ```
 
@@ -91,8 +118,8 @@ Hru netreba inštalovať – stačí otvoriť odkaz vyššie. Spätnú väzbu (c
 nápady, čo je ťažké alebo nudné) píšte prosím do záložky **Issues** v tomto
 repozitári.
 
-Zatiaľ funguje len ovládanie klávesnicou a myšou, takže na počítači.
-Dotykové ovládanie pre mobil zatiaľ nie je.
+Hra funguje na počítači (klávesnica + myš) aj na mobile a tablete
+(dotykové ovládanie). Na telefóne otoč displej na šírku.
 
 ## Poznámka
 

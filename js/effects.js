@@ -1,12 +1,13 @@
 /* Častice: oheň, dym, iskry, plávajúci text */
 const FX = {
+  max: 820,
   parts: [],
   texts: [],
 
   reset() { this.parts.length = 0; this.texts.length = 0; },
 
   add(p) {
-    if (this.parts.length > 820) this.parts.shift();
+    if (this.parts.length > this.max) this.parts.shift();
     this.parts.push(p);
   },
 

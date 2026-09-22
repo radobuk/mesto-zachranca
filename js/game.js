@@ -6,6 +6,7 @@ const Game = {
   cam: { x: 0, y: 0 },
   score: 0, saved: 0, trust: 100, time: 0, shake: 0, t: 0,
   last: 0, toastT: 0,
+  webPointer: null, touch: false,
 
   input: {
     left: false, right: false, up: false, down: false,
@@ -16,8 +17,11 @@ const Game = {
   init() {
     this.cv = document.getElementById('game');
     this.ctx = this.cv.getContext('2d');
+    this.touch = matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+    if (this.touch) FX.max = 420;
     this.resize();
     addEventListener('resize', () => this.resize());
+    addEventListener('orientationchange', () => setTimeout(() => this.resize(), 250));
 
     const setKey = (e, v) => {
       const k = e.key.toLowerCase();
@@ -34,24 +38,61 @@ const Game = {
     addEventListener('keydown', (e) => setKey(e, true));
     addEventListener('keyup', (e) => setKey(e, false));
 
-    this.cv.addEventListener('mousemove', (e) => {
+    // Pointer events = myš aj prst naraz (viacdotykové ovládanie)
+    const pos = (e) => {
       const r = this.cv.getBoundingClientRect();
       this.input.mx = e.clientX - r.left;
       this.input.my = e.clientY - r.top;
-    });
-    this.cv.addEventListener('mousedown', (e) => {
-      if (e.button !== 0) return;
+    };
+    this.cv.addEventListener('pointerdown', (e) => {
+      if (e.button > 0) return;
+      if (this.webPointer !== null) return;      // druhý prst je na tlačidle
+      this.webPointer = e.pointerId;
+      pos(e);
       this.input.mouse = true;
+      Snd.init();
       if (this.state === 'play' && this.player) {
         const w = this.screenToWorld(this.input.mx, this.input.my);
         this.player.shoot(w.x, w.y);
         this.player.retry = 6;
       }
     });
-    addEventListener('mouseup', () => {
+    this.cv.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'mouse' || e.pointerId === this.webPointer) pos(e);
+    });
+    const endPointer = (e) => {
+      if (e.pointerId !== this.webPointer) return;
+      this.webPointer = null;
       this.input.mouse = false;
       if (this.player) this.player.release();
+    };
+    addEventListener('pointerup', endPointer);
+    addEventListener('pointercancel', endPointer);
+
+    // dotykové tlačidlá
+    document.querySelectorAll('#touch [data-k]').forEach((b) => {
+      const k = b.dataset.k;
+      const on = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try { b.setPointerCapture(e.pointerId); } catch (err) {}
+        b.classList.add('on');
+        Snd.init();
+        if (k === 'jump' || k === 'action') this.input.tapped[k] = true;
+        else this.input[k] = true;
+      };
+      const off = (e) => {
+        if (e) e.preventDefault();
+        b.classList.remove('on');
+        if (k !== 'jump' && k !== 'action') this.input[k] = false;
+      };
+      b.addEventListener('pointerdown', on);
+      b.addEventListener('pointerup', off);
+      b.addEventListener('pointercancel', off);
+      b.addEventListener('lostpointercapture', off);
+      b.addEventListener('contextmenu', (e) => e.preventDefault());
     });
+
     this.cv.addEventListener('contextmenu', (e) => e.preventDefault());
 
     document.getElementById('btnStart').onclick = () => { Snd.init(); this.start(); };
@@ -65,7 +106,7 @@ const Game = {
   },
 
   resize() {
-    const d = Math.min(devicePixelRatio || 1, 2);
+    const d = Math.min(devicePixelRatio || 1, this.touch ? 1.5 : 2);
     this.cw = innerWidth; this.ch = innerHeight;
     this.cv.width = this.cw * d;
     this.cv.height = this.ch * d;
@@ -88,6 +129,12 @@ const Game = {
     document.getElementById('menu').classList.add('hidden');
     document.getElementById('over').classList.add('hidden');
     document.getElementById('hud').classList.remove('hidden');
+    if (this.touch) {
+      document.getElementById('touch').classList.remove('hidden');
+      document.getElementById('hint').innerHTML =
+        'Ťukni a drž prst na budove = pavučina &nbsp;·&nbsp; ◀ ▶ = pohyb &nbsp;·&nbsp; ▲▼ = lano &nbsp;·&nbsp; E = zdvihni človeka';
+      try { document.documentElement.requestFullscreen({ navigationUI: 'hide' }); } catch (e) {}
+    }
     const hint = document.getElementById('hint');
     hint.style.opacity = 1;
     setTimeout(() => (hint.style.opacity = 0), 14000);
